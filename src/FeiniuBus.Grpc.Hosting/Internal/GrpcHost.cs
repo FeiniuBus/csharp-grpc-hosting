@@ -56,7 +56,7 @@ namespace FeiniuBus.Grpc.Hosting.Internal
             {
                 try
                 {
-                    StopAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+                    StopAsync().GetAwaiter().GetResult();
                 }
                 catch (Exception e)
                 {
@@ -106,7 +106,7 @@ namespace FeiniuBus.Grpc.Hosting.Internal
 
             if (Server != null)
             {
-                await Server.ShutdownAsync();
+                await Server.ShutdownAsync().ConfigureAwait(false);
             }
         }
 
