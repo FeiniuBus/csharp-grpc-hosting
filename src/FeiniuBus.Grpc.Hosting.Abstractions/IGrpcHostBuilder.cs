@@ -14,9 +14,23 @@ namespace FeiniuBus.Grpc.Hosting
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="serviceTypes"></param>
+        /// <returns></returns>
+        IGrpcHostBuilder BindServices(params Type[] serviceTypes);
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="configureServices"></param>
         /// <returns></returns>
         IGrpcHostBuilder ConfigureServices(Action<IServiceCollection> configureServices);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        string GetSetting(string key);
 
         /// <summary>
         /// Add or replace a setting in the configuration.

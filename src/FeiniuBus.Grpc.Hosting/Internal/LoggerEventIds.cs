@@ -5,5 +5,7 @@
         public const int Starting = 1;
         public const int Started = 2;
         public const int Shutdown = 3;
+        public const int ServiceDefinitionNull = 4;
+        public const int ServerShutdownException = 5;
     }
 }

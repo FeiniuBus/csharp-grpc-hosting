@@ -1,5 +1,6 @@
 ﻿
 
+using System;
 using Microsoft.Extensions.Logging;
 
 namespace FeiniuBus.Grpc.Hosting.Internal
@@ -33,6 +34,17 @@ namespace FeiniuBus.Grpc.Hosting.Internal
                 logger.LogDebug(
                     LoggerEventIds.Shutdown,
                     "Hosting shutdown");
+            }
+        }
+
+        public static void ServerShutdownException(this ILogger logger, Exception ex)
+        {
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.LogDebug(
+                    LoggerEventIds.ServerShutdownException,
+                    ex,
+                    "Server shutdown exception");
             }
         }
     }

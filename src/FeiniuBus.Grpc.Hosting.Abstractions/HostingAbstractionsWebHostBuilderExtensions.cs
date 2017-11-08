@@ -26,5 +26,10 @@ namespace FeiniuBus.Grpc.Hosting
 
             return builder.UseSetting(GrpcHostDefaults.ServerUrlsKey, string.Join(ServerUrlsSeparator, urls));
         }
+
+        public static IGrpcHostBuilder BindService<TService>(this IGrpcHostBuilder builder) where TService : class
+        {
+            return builder.BindServices(typeof(TService));
+        }
     }
 }

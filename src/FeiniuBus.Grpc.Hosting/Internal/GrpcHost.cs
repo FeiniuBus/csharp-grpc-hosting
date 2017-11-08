@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -9,14 +11,21 @@ namespace FeiniuBus.Grpc.Hosting.Internal
 {
     internal class GrpcHost : IGrpcHost
     {
+        private const string DefaultHost = "localhost";
+        private const int DefaultPort = 4009;
+        
         private ILogger<GrpcHost> _logger;
         private readonly IServiceProvider _hostingServiceProvider;
+        private readonly List<Type> _serviceTypes;
+        private readonly IConfiguration _config;
         private IServiceProvider _applicationServices;
         private readonly IServiceCollection _applicationServiceCollection;
         private IStartup _startup;
+        private bool _stopped;
         private Server Server { get; set; }
 
-        public GrpcHost(IServiceCollection appServices, IServiceProvider hostingServiceProvider)
+        public GrpcHost(IServiceCollection appServices, IServiceProvider hostingServiceProvider, IConfiguration config,
+            List<Type> serviceTypes)
         {
             if (appServices == null)
             {
@@ -26,14 +35,37 @@ namespace FeiniuBus.Grpc.Hosting.Internal
             {
                 throw new ArgumentNullException(nameof(hostingServiceProvider));
             }
+            if (config == null)
+            {
+                throw new ArgumentNullException(nameof(config));
+            }
+            if (serviceTypes == null)
+            {
+                throw new ArgumentNullException(nameof(serviceTypes));
+            }
 
             _hostingServiceProvider = hostingServiceProvider;
             _applicationServiceCollection = appServices;
+            _config = config;
+            _serviceTypes = serviceTypes;
         }
-        
+
         public void Dispose()
         {
-            throw new NotImplementedException();
+            if (!_stopped)
+            {
+                try
+                {
+                    StopAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+                }
+                catch (Exception e)
+                {
+                    _logger?.ServerShutdownException(e);
+                }
+            }
+            
+            (_applicationServices as IDisposable)?.Dispose();
+            (_hostingServiceProvider as IDisposable)?.Dispose();
         }
 
         public IServiceProvider Services
@@ -44,20 +76,38 @@ namespace FeiniuBus.Grpc.Hosting.Internal
                 return _applicationServices;
             }
         }
+
+        public void Initialize()
+        {
+            EnsureApplicationServices();
+            EnsureServer();
+        }
         
         public void Start()
         {
             _logger = _applicationServices.GetRequiredService<ILogger<GrpcHost>>();
             _logger.Starting();
             
+            Initialize();
             Server.Start();
             
             _logger.Started();
         }
 
-        public Task StopAsync(CancellationToken cancellationToken = default(CancellationToken))
+        public async Task StopAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            throw new NotImplementedException();
+            if (_stopped)
+            {
+                return;
+            }
+            _stopped = true;
+            
+            _logger?.Shutdown();
+
+            if (Server != null)
+            {
+                await Server.ShutdownAsync();
+            }
         }
 
         private void EnsureApplicationServices()
@@ -83,8 +133,43 @@ namespace FeiniuBus.Grpc.Hosting.Internal
         {
             if (Server == null)
             {
-                var rpcs = _applicationServices.GetServices<IGrpcService>();
                 Server = new Server();
+                
+                var urls = _config[GrpcHostDefaults.ServerUrlsKey];
+                if (string.IsNullOrEmpty(urls))
+                {
+                    Server.Ports.Add(new ServerPort(DefaultHost, DefaultPort, ServerCredentials.Insecure));
+                }
+                else
+                {
+                    foreach (var value in urls.Split(new []{','}, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        var parts = value.Split(new[] {':'}, StringSplitOptions.RemoveEmptyEntries);
+                        if (parts.Length == 1)
+                        {
+                            Server.Ports.Add(new ServerPort(parts[0], DefaultPort, ServerCredentials.Insecure));
+                        }
+                        else
+                        {
+                            Server.Ports.Add(new ServerPort(parts[0], Convert.ToInt32(parts[1]),
+                                ServerCredentials.Insecure));
+                        }
+                    }
+                }
+
+                foreach (var serviceType in _serviceTypes)
+                {
+                    ServerServiceDefinition definition =
+                        RpcServcieLoader.LoadService(_applicationServices, serviceType);
+
+                    if (definition == null)
+                    {
+                        _logger.LogWarning(LoggerEventIds.ServiceDefinitionNull, "Service type: {0}'s definition is null", serviceType);
+                        continue;
+                    }
+                    
+                    Server.Services.Add(definition);
+                }
             }
         }        
     }

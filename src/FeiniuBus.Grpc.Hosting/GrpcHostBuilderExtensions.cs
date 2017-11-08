@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reflection;
+using FeiniuBus.Grpc.Hosting.Internal;
+using FeiniuBus.Grpc.Hosting.Startup;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FeiniuBus.Grpc.Hosting
@@ -8,7 +10,6 @@ namespace FeiniuBus.Grpc.Hosting
     {
         public static IGrpcHostBuilder UseStartup(this IGrpcHostBuilder builder, Type startupType)
         {
-            var startupAssemblyName = startupType.GetTypeInfo().Assembly.GetName().Name;
             return builder.ConfigureServices(services =>
             {
                 if (typeof(IStartup).GetTypeInfo().IsAssignableFrom(startupType.GetTypeInfo()))
@@ -20,7 +21,8 @@ namespace FeiniuBus.Grpc.Hosting
                     services.AddSingleton(typeof(IStartup), sp =>
                     {
                         var hostingEnvironment = sp.GetRequiredService<IHostingEnvironment>();
-                        return null;
+                        return new ConventionBasedStartup(StartupLoader.LoadMethods(sp, startupType,
+                            hostingEnvironment.EnvironmentName));
                     });
                 }
             });
