@@ -10,8 +10,6 @@ namespace FeiniuBus.Grpc.Hosting
 
         void Start();
 
-        Task StartAsync(CancellationToken cancellationToken = default(CancellationToken));
-
         Task StopAsync(CancellationToken cancellationToken = default(CancellationToken));
     }
 }

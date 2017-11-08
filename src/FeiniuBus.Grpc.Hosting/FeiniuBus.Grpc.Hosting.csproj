@@ -5,4 +5,9 @@
   <ItemGroup>
     <ProjectReference Include="..\FeiniuBus.Grpc.Hosting.Abstractions\FeiniuBus.Grpc.Hosting.Abstractions.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Grpc.Core" Version="1.7.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.0" />
+  </ItemGroup>
 </Project>
