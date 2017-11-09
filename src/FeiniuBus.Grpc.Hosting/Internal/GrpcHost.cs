@@ -27,27 +27,10 @@ namespace FeiniuBus.Grpc.Hosting.Internal
         public GrpcHost(IServiceCollection appServices, IServiceProvider hostingServiceProvider, IConfiguration config,
             List<Type> serviceTypes)
         {
-            if (appServices == null)
-            {
-                throw new ArgumentNullException(nameof(appServices));
-            }
-            if (hostingServiceProvider == null)
-            {
-                throw new ArgumentNullException(nameof(hostingServiceProvider));
-            }
-            if (config == null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
-            if (serviceTypes == null)
-            {
-                throw new ArgumentNullException(nameof(serviceTypes));
-            }
-
-            _hostingServiceProvider = hostingServiceProvider;
-            _applicationServiceCollection = appServices;
-            _config = config;
-            _serviceTypes = serviceTypes;
+            _hostingServiceProvider = hostingServiceProvider ?? throw new ArgumentNullException(nameof(hostingServiceProvider));
+            _applicationServiceCollection = appServices ?? throw new ArgumentNullException(nameof(appServices));
+            _config = config ?? throw new ArgumentNullException(nameof(config));
+            _serviceTypes = serviceTypes ?? throw new ArgumentNullException(nameof(serviceTypes));
         }
 
         public void Dispose()
