@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using FeiniuBus.Grpc.Hosting.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -78,10 +79,35 @@ namespace FeiniuBus.Grpc.Hosting
             return this;
         }
 
+        private string ResolveContentRootPath(string contentRootPath, string basePath)
+        {
+            if (string.IsNullOrEmpty(contentRootPath))
+            {
+                return basePath;
+            }
+            if (Path.IsPathRooted(contentRootPath))
+            {
+                return contentRootPath;
+            }
+
+            return Path.Combine(Path.GetFullPath(basePath), contentRootPath);
+        }
+
         private IServiceCollection BuildCommonServices()
         {
+            var contentRootPath =
+                ResolveContentRootPath(_config[GrpcHostDefaults.ContentRootKey], AppContext.BaseDirectory);
+            _hostingEnvironment.ContentRootPath = contentRootPath;
+
+            var environment = _config[GrpcHostDefaults.EnvironmentKey];
+            if (!string.IsNullOrEmpty(environment))
+            {
+                _hostingEnvironment.EnvironmentName = environment;
+            }
+            
             var services = new ServiceCollection();
             services.AddSingleton(_hostingEnvironment);
+
 
             var builder = new ConfigurationBuilder().AddInMemoryCollection(_config.AsEnumerable());
             var configuration = builder.Build();
