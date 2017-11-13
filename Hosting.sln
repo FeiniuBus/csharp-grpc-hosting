@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeiniuBus.Grpc.Hosting", "s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeiniuBus.Grpc.Hosting.Abstractions", "src\FeiniuBus.Grpc.Hosting.Abstractions\FeiniuBus.Grpc.Hosting.Abstractions.csproj", "{E947A7E0-1D2E-4B8F-BDE0-C196390079B5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeiniuBus.Grpc.Hosting.Consul", "src\FeiniuBus.Grpc.Hosting.Consul\FeiniuBus.Grpc.Hosting.Consul.csproj", "{9F8E83FF-3D2C-4B90-AC42-C497482F5377}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{E947A7E0-1D2E-4B8F-BDE0-C196390079B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E947A7E0-1D2E-4B8F-BDE0-C196390079B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E947A7E0-1D2E-4B8F-BDE0-C196390079B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F8E83FF-3D2C-4B90-AC42-C497482F5377}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F8E83FF-3D2C-4B90-AC42-C497482F5377}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F8E83FF-3D2C-4B90-AC42-C497482F5377}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F8E83FF-3D2C-4B90-AC42-C497482F5377}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
