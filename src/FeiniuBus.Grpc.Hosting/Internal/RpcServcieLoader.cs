@@ -34,8 +34,13 @@ namespace FeiniuBus.Grpc.Hosting.Internal
 
         private static Type FindBaseType(Type serviceType)
         {
-            var type = serviceType;
-            while (type.BaseType != typeof(object))
+            if (serviceType.BaseType == typeof(object))
+            {
+                return serviceType;
+            }
+            
+            var type = serviceType.BaseType;
+            while (type != typeof(object))
             {
                 type = type.BaseType;
             }
