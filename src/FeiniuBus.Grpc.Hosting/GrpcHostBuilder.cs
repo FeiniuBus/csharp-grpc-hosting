@@ -11,7 +11,7 @@ namespace FeiniuBus.Grpc.Hosting
     {
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly List<Action<IServiceCollection>> _configureServicesDelegates;
-        private readonly List<Type> _serviceTypes;
+        private Type _serviceType;
         private readonly IConfiguration _config;
         private bool _grpcHostBuilt;
 
@@ -20,7 +20,6 @@ namespace FeiniuBus.Grpc.Hosting
             _hostingEnvironment = new HostingEnvironment();
             _config = new ConfigurationBuilder().AddEnvironmentVariables("GRPCHOST_").Build();
             _configureServicesDelegates = new List<Action<IServiceCollection>>();
-            _serviceTypes = new List<Type>();
 
             if (string.IsNullOrEmpty(GetSetting(GrpcHostDefaults.ServerUrlsKey)))
             {
@@ -41,19 +40,19 @@ namespace FeiniuBus.Grpc.Hosting
             var applicationServices = hostingServices.Clone();
             var hostingServiceProvider = hostingServices.BuildServiceProvider();
 
-            var host = new GrpcHost(applicationServices, hostingServiceProvider, _config, _serviceTypes);
+            var host = new GrpcHost(applicationServices, hostingServiceProvider, _config, _serviceType);
             host.Initialize();
             return host;
         }
 
-        public IGrpcHostBuilder BindServices(params Type[] serviceTypes)
+        public IGrpcHostBuilder BindServices(Type serviceType)
         {
-            if (serviceTypes == null)
+            if (serviceType == null)
             {
-                throw new ArgumentNullException(nameof(serviceTypes));
+                throw new ArgumentNullException(nameof(serviceType));
             }
 
-            _serviceTypes.AddRange(serviceTypes);
+            _serviceType = serviceType;
             return this;
         }
 

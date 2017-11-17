@@ -14,9 +14,9 @@ namespace FeiniuBus.Grpc.Hosting
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="serviceTypes"></param>
+        /// <param name="serviceType"></param>
         /// <returns></returns>
-        IGrpcHostBuilder BindServices(params Type[] serviceTypes);
+        IGrpcHostBuilder BindServices(Type serviceType);
 
         /// <summary>
         /// 
