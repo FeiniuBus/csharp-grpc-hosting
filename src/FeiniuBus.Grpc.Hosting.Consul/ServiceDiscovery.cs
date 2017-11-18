@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Consul;
 
@@ -18,7 +19,7 @@ namespace FeiniuBus.Grpc.Hosting.Consul
             });
         }
 
-        public async Task<Entry> RegisterServiceAsync(string name, EndPoint endpoint)
+        public async Task<string> RegisterServiceAsync(string name, EndPoint endpoint, CancellationToken token = default (CancellationToken))
         {
             if (endpoint is IPEndPoint node)
             {
@@ -43,12 +44,12 @@ namespace FeiniuBus.Grpc.Hosting.Consul
                     Check = acr
                 };
 
-                var res = await _client.Agent.ServiceRegister(asr).ConfigureAwait(false);
+                var res = await _client.Agent.ServiceRegister(asr, token).ConfigureAwait(false);
                 if (res.StatusCode != HttpStatusCode.OK)
                 {
                     throw new ApplicationException($"Failed to register service {name} on endpoint {node}");
                 }
-                return new Entry(this, name, node.Address.ToString(), node.Port, serviceId);
+                return serviceId;
             }
 
             if (endpoint is DnsEndPoint dns)
@@ -74,46 +75,20 @@ namespace FeiniuBus.Grpc.Hosting.Consul
                     Check = acr
                 };
 
-                var res = await _client.Agent.ServiceRegister(asr).ConfigureAwait(false);
+                var res = await _client.Agent.ServiceRegister(asr, token).ConfigureAwait(false);
                 if (res.StatusCode != HttpStatusCode.OK)
                 {
                     throw new ApplicationException($"Failed to register service {name} on endpoint {dns}");
                 }
-                return new Entry(this, name, dns.Host, dns.Port, serviceId);
+                return serviceId;
             }
             
             throw new ArgumentException("The type of endpoint must be one of IPEndPoint or DnsEndPoint", nameof(endpoint));
         }
 
-        public async Task UnregisterServiceAsync(string serviceId)
+        public async Task UnregisterServiceAsync(string serviceId, CancellationToken token = default (CancellationToken))
         {
-            await _client.Agent.ServiceDeregister(serviceId).ConfigureAwait(false);
-        }
-    }
-
-    internal sealed class Entry : IDisposable
-    {
-        private readonly ServiceDiscovery _serviceDiscovery;
-
-        public Entry(ServiceDiscovery serviceDiscovery, string serviceName, string address, int port,
-            string serviceId)
-        {
-            _serviceDiscovery = serviceDiscovery;
-            ServiceName = serviceName;
-            ServiceId = serviceId;
-
-            Address = address;
-            Port = port;
-        }
-
-        public string ServiceName { get; set; }
-        public string Address { get; set; }
-        public int Port { get; set; }
-        public string ServiceId { get; set; }
-        
-        public void Dispose()
-        {
-            _serviceDiscovery.UnregisterServiceAsync(ServiceId).ConfigureAwait(false).GetAwaiter().GetResult();
+            await _client.Agent.ServiceDeregister(serviceId, token).ConfigureAwait(false);
         }
     }
 }
