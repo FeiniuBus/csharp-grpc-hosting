@@ -16,7 +16,7 @@ namespace FeiniuBus.Grpc.Hosting.Internal
         
         private ILogger<GrpcHost> _logger;
         private readonly IServiceProvider _hostingServiceProvider;
-        private readonly Type _serviceType;
+        private readonly List<Type> _serviceTypes;
         private readonly IConfiguration _config;
         private IServiceProvider _applicationServices;
         private readonly IServiceCollection _applicationServiceCollection;
@@ -25,12 +25,12 @@ namespace FeiniuBus.Grpc.Hosting.Internal
         private Server Server { get; set; }
 
         public GrpcHost(IServiceCollection appServices, IServiceProvider hostingServiceProvider, IConfiguration config,
-            Type serviceType)
+            List<Type> serviceTypes)
         {
             _hostingServiceProvider = hostingServiceProvider ?? throw new ArgumentNullException(nameof(hostingServiceProvider));
             _applicationServiceCollection = appServices ?? throw new ArgumentNullException(nameof(appServices));
             _config = config ?? throw new ArgumentNullException(nameof(config));
-            _serviceType = serviceType ?? throw new ArgumentNullException(nameof(serviceType));
+            _serviceTypes = serviceTypes ?? throw new ArgumentNullException(nameof(serviceTypes));
         }
 
         public void Dispose()
@@ -139,16 +139,19 @@ namespace FeiniuBus.Grpc.Hosting.Internal
                         }
                     }
                 }
-                
-                ServerServiceDefinition definition =
-                    RpcServcieLoader.LoadService(_applicationServices, _serviceType);
 
-                if (definition == null)
+                foreach (var serviceType in _serviceTypes)
                 {
-                    throw new InvalidOperationException($"Service type: {_serviceType.FullName}'s definition is null");
-                }
+                    ServerServiceDefinition definition =
+                        RpcServcieLoader.LoadService(_applicationServices, serviceType);
+
+                    if (definition == null)
+                    {
+                        throw new InvalidOperationException($"Service type: {serviceType.FullName}'s definition is null");
+                    }
                     
-                Server.Services.Add(definition);
+                    Server.Services.Add(definition);
+                }
             }
         }        
     }

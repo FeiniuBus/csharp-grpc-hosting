@@ -4,5 +4,9 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Consul" Version="0.7.2.3" />
+    <PackageReference Include="Grpc.Core" Version="1.7.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FeiniuBus.Grpc.Hosting.Abstractions\FeiniuBus.Grpc.Hosting.Abstractions.csproj" />
   </ItemGroup>
 </Project>
