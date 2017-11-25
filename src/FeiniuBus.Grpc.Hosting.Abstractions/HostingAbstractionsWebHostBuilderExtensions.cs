@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using Microsoft.Extensions.Configuration;
 
 namespace FeiniuBus.Grpc.Hosting
@@ -15,6 +16,16 @@ namespace FeiniuBus.Grpc.Hosting
             }
 
             return builder;
+        }
+
+        public static IGrpcHostBuilder UseContentRoot(this IGrpcHostBuilder builder, string contentRoot)
+        {
+            if (contentRoot == null)
+            {
+                throw new ArgumentNullException(nameof(contentRoot));
+            }
+
+            return builder.UseSetting(GrpcHostDefaults.ContentRootKey, contentRoot);
         }
         
         public static IGrpcHostBuilder UseUrls(this IGrpcHostBuilder builder, params string[] urls)
