@@ -21,6 +21,7 @@ namespace FeiniuBus.Grpc.Hosting.Internal
         private IServiceProvider _applicationServices;
         private readonly IServiceCollection _applicationServiceCollection;
         private IStartup _startup;
+        private ApplicationLifetime _applicationLifetime;
         private bool _stopped;
         private Server Server { get; set; }
 
@@ -31,6 +32,8 @@ namespace FeiniuBus.Grpc.Hosting.Internal
             _applicationServiceCollection = appServices ?? throw new ArgumentNullException(nameof(appServices));
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _serviceTypes = serviceTypes ?? throw new ArgumentNullException(nameof(serviceTypes));
+
+            _applicationServiceCollection.AddSingleton<IApplicationLifetime, ApplicationLifetime>();
         }
 
         public void Dispose()
@@ -72,7 +75,14 @@ namespace FeiniuBus.Grpc.Hosting.Internal
             _logger.Starting();
             
             Initialize();
+
+            _applicationLifetime =
+                _applicationServices.GetRequiredService<IApplicationLifetime>() as ApplicationLifetime;
+            
             Server.Start();
+            
+            // Fire IApplicationLifetime.Started
+            _applicationLifetime?.NotifyStarted();
             
             _logger.Started();
         }
@@ -87,10 +97,16 @@ namespace FeiniuBus.Grpc.Hosting.Internal
             
             _logger?.Shutdown();
 
+            // Fire IApplicationLifetime.Stopping
+            _applicationLifetime.StopApplication();
+            
             if (Server != null)
             {
                 await Server.ShutdownAsync().ConfigureAwait(false);
             }
+            
+            // Fire IApplicationLifetime.Stopped
+            _applicationLifetime.NotifyStopped();
         }
 
         private void EnsureApplicationServices()

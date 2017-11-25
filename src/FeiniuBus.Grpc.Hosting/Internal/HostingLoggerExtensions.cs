@@ -1,6 +1,7 @@
 ﻿
 
 using System;
+using System.Reflection;
 using Microsoft.Extensions.Logging;
 
 namespace FeiniuBus.Grpc.Hosting.Internal
@@ -46,6 +47,19 @@ namespace FeiniuBus.Grpc.Hosting.Internal
                     ex,
                     "Server shutdown exception");
             }
+        }
+
+        public static void ApplicationError(this ILogger logger, EventId eventId, string message, Exception exception)
+        {
+            if (exception is ReflectionTypeLoadException reflectionTypeLoadException)
+            {
+                foreach (var ex in reflectionTypeLoadException.LoaderExceptions)
+                {
+                    message = message + Environment.NewLine + ex.Message;
+                }
+            }
+
+            logger.LogCritical(eventId, message, exception);
         }
     }
 }

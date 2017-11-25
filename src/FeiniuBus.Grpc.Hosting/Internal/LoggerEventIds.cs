@@ -7,5 +7,8 @@
         public const int Shutdown = 3;
         public const int ServiceDefinitionNull = 4;
         public const int ServerShutdownException = 5;
+        public const int ApplicationStartupException = 6;
+        public const int ApplicationStoppingException = 7;
+        public const int ApplicationStoppedException = 8;
     }
 }
