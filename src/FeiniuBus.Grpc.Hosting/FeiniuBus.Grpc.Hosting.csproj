@@ -2,6 +2,8 @@
   <Import Project="..\..\build\common.props" />
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Description>FeiniuBus hosting infrastructure and startup logic for gRPC applications.</Description>
+    <PackageTags>netcore;hosting;grpc</PackageTags>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\FeiniuBus.Grpc.Hosting.Abstractions\FeiniuBus.Grpc.Hosting.Abstractions.csproj" />

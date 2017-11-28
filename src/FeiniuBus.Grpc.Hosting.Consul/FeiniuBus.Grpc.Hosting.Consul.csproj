@@ -2,6 +2,8 @@
   <Import Project="..\..\build\common.props" />
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Description>FeiniuBus hosting infrastructure and startup logic for gRPC applications running with a Service Discovery</Description>
+    <PackageTags>netcore;hosting;grpc</PackageTags>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Consul" Version="$(ConsulPackageVersion)" />
