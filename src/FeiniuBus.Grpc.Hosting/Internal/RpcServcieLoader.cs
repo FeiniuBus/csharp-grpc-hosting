@@ -40,7 +40,7 @@ namespace FeiniuBus.Grpc.Hosting.Internal
             }
             
             var type = serviceType.BaseType;
-            while (type != typeof(object))
+            while (type.BaseType != typeof(object))
             {
                 type = type.BaseType;
             }
