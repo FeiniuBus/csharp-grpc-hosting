@@ -23,7 +23,6 @@ namespace FeiniuBus.Grpc.Hosting.Internal
         private IStartup _startup;
         private ApplicationLifetime _applicationLifetime;
         private bool _stopped;
-        private Server Server { get; set; }
 
         public GrpcHost(IServiceCollection appServices, IServiceProvider hostingServiceProvider, IConfiguration config,
             List<Type> serviceTypes)
@@ -62,6 +61,8 @@ namespace FeiniuBus.Grpc.Hosting.Internal
                 return _applicationServices;
             }
         }
+        
+        public Server Server { get; private set; }
 
         public void Initialize()
         {

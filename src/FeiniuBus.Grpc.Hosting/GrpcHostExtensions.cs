@@ -37,7 +37,14 @@ namespace FeiniuBus.Grpc.Hosting
                 host.Start();
                 
                 var hostingEnvironment = host.Services.GetService<IHostingEnvironment>();
+                
                 Console.WriteLine($"Hosting environment: {hostingEnvironment.EnvironmentName}");
+                Console.WriteLine($"Content root path: {hostingEnvironment.ContentRootPath}");
+
+                foreach (var port in host.Server.Ports)
+                {
+                    Console.WriteLine($"Now listening on: {port.Host}:{port.Port}");
+                }
 
                 if (!string.IsNullOrEmpty(shutdownMessage))
                 {
@@ -83,16 +90,23 @@ namespace FeiniuBus.Grpc.Hosting
 
         private static async Task WaitForTokenShutdownAsync(this IGrpcHost host, CancellationToken token)
         {
-            var waitForStop = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var applicationLifetime = host.Services.GetService<IApplicationLifetime>();
             token.Register(state =>
             {
-                var tcs = (TaskCompletionSource<object>) state;
+                ((IApplicationLifetime)state).StopApplication();
+            }, applicationLifetime);
+            
+            var waitForStop = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            applicationLifetime.ApplicationStopping.Register(obj =>
+            {
+                var tcs = (TaskCompletionSource<object>)obj;
                 tcs.TrySetResult(null);
             }, waitForStop);
 
             await waitForStop.Task;
 
-            await host.StopAsync(token);
+            // ReSharper disable once MethodSupportsCancellation
+            await host.StopAsync();
         }
     }
 }
