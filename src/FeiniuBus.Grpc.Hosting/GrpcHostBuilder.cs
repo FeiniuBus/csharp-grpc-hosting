@@ -10,16 +10,20 @@ namespace FeiniuBus.Grpc.Hosting
     public class GrpcHostBuilder : IGrpcHostBuilder
     {
         private readonly IHostingEnvironment _hostingEnvironment;
-        private readonly List<Action<IServiceCollection>> _configureServicesDelegates;
+        private readonly List<Action<GrpcHostBuilderContext, IServiceCollection>> _configureServicesDelegates;
+        private List<Action<GrpcHostBuilderContext, IConfigurationBuilder>> _configureAppConfigurationBuilderDelegates;
         private readonly List<Type> _serviceTypes;
         private readonly IConfiguration _config;
+        private GrpcHostBuilderContext _context;
         private bool _grpcHostBuilt;
 
         public GrpcHostBuilder()
         {
             _hostingEnvironment = new HostingEnvironment();
             _config = new ConfigurationBuilder().AddEnvironmentVariables("GRPCHOST_").Build();
-            _configureServicesDelegates = new List<Action<IServiceCollection>>();
+            _configureServicesDelegates = new List<Action<GrpcHostBuilderContext, IServiceCollection>>();
+            _configureAppConfigurationBuilderDelegates =
+                new List<Action<GrpcHostBuilderContext, IConfigurationBuilder>>();
             _serviceTypes = new List<Type>();
 
             if (string.IsNullOrEmpty(GetSetting(GrpcHostDefaults.ServerUrlsKey)))
@@ -27,6 +31,11 @@ namespace FeiniuBus.Grpc.Hosting
                 UseSetting(GrpcHostDefaults.ServerUrlsKey,
                     Environment.GetEnvironmentVariable("GRPCHOST_SERVER.URLS"));
             }
+            
+            _context = new GrpcHostBuilderContext
+            {
+                Configuration = _config
+            };
         }
         
         public IGrpcHost Build()
@@ -46,6 +55,17 @@ namespace FeiniuBus.Grpc.Hosting
             return host;
         }
 
+        public IGrpcHostBuilder ConfigureAppConfiguration(Action<GrpcHostBuilderContext, IConfigurationBuilder> configureDelegate)
+        {
+            if (configureDelegate == null)
+            {
+                throw new ArgumentNullException(nameof(configureDelegate));
+            }
+            
+            _configureAppConfigurationBuilderDelegates.Add(configureDelegate);
+            return this;
+        }
+
         public IGrpcHostBuilder BindServices(params Type[] serviceTypes)
         {
             if (serviceTypes == null || serviceTypes.Length == 0)
@@ -58,6 +78,16 @@ namespace FeiniuBus.Grpc.Hosting
         }
 
         public IGrpcHostBuilder ConfigureServices(Action<IServiceCollection> configureServices)
+        {
+            if (configureServices == null)
+            {
+                throw new ArgumentNullException(nameof(configureServices));
+            }
+
+            return ConfigureServices((_, services) => configureServices(services));
+        }
+
+        public IGrpcHostBuilder ConfigureServices(Action<GrpcHostBuilderContext, IServiceCollection> configureServices)
         {
             if (configureServices == null)
             {
@@ -104,21 +134,32 @@ namespace FeiniuBus.Grpc.Hosting
             {
                 _hostingEnvironment.EnvironmentName = environment;
             }
+
+            _context.HostingEnvironment = _hostingEnvironment;
             
             var services = new ServiceCollection();
             services.AddSingleton(_hostingEnvironment);
+            services.AddSingleton(_context);
 
+            var builder = new ConfigurationBuilder().SetBasePath(_hostingEnvironment.ContentRootPath)
+                .AddInMemoryCollection(_config.AsEnumerable());
 
-            var builder = new ConfigurationBuilder().AddInMemoryCollection(_config.AsEnumerable());
+            foreach (var configureAppConfiguration in _configureAppConfigurationBuilderDelegates)
+            {
+                configureAppConfiguration(_context, builder);
+            }
+            
             var configuration = builder.Build();
-            services.AddSingleton(configuration);
+            services.AddSingleton<IConfiguration>(configuration);
+            _context.Configuration = configuration;
 
             services.AddTransient<IServiceProviderFactory<IServiceCollection>, DefaultServiceProviderFactory>();
+            services.AddOptions();
             services.AddLogging();
 
             foreach (var configureServices in _configureServicesDelegates)
             {
-                configureServices(services);
+                configureServices(_context, services);
             }
             
             return services;

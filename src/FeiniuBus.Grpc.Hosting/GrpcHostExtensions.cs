@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace FeiniuBus.Grpc.Hosting
 {
-    public static class WebHostExtensions
+    public static class GrpcHostExtensions
     {
         public static void Run(this IGrpcHost host)
         {
