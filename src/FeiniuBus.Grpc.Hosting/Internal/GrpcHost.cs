@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using FeiniuBus.Grpc.Hosting.Builder;
 using Grpc.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +23,7 @@ namespace FeiniuBus.Grpc.Hosting.Internal
         private readonly IServiceCollection _applicationServiceCollection;
         private IStartup _startup;
         private ApplicationLifetime _applicationLifetime;
+        private bool _built;
         private bool _stopped;
 
         public GrpcHost(IServiceCollection appServices, IServiceProvider hostingServiceProvider, IConfiguration config,
@@ -66,8 +68,10 @@ namespace FeiniuBus.Grpc.Hosting.Internal
 
         public void Initialize()
         {
-            EnsureApplicationServices();
-            EnsureServer();
+            if (!_built)
+            {
+                BuildApplication();
+            }
         }
         
         public void Start()
@@ -117,6 +121,21 @@ namespace FeiniuBus.Grpc.Hosting.Internal
                 EnsureStartup();
                 _applicationServices = _startup.ConfigureServices(_applicationServiceCollection);
             }
+        }
+
+        private void BuildApplication()
+        {
+            EnsureApplicationServices();
+            EnsureServer();
+
+            var builderFactory = _applicationServices.GetRequiredService<IApplicationBuilderFactory>();
+            var builder = builderFactory.CreateBuilder();
+            builder.ApplicationServices = _applicationServices;
+
+            Action<IApplicationBuilder> configure = _startup.Configure;
+            configure(builder);
+
+            _built = true;
         }
 
         private void EnsureStartup()

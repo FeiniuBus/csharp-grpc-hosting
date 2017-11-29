@@ -31,5 +31,22 @@ namespace FeiniuBus.Grpc.Hosting.Startup
                 throw;
             }
         }
+
+        public void Configure(IApplicationBuilder app)
+        {
+            try
+            {
+                _methods.ConfigureDelegate(app);
+            }
+            catch (Exception e)
+            {
+                if (e is TargetInvocationException)
+                {
+                    ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                }
+
+                throw;
+            }
+        }
     }
 }

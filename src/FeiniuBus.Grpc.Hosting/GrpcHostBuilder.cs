@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using FeiniuBus.Grpc.Hosting.Builder;
 using FeiniuBus.Grpc.Hosting.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -153,6 +154,7 @@ namespace FeiniuBus.Grpc.Hosting
             services.AddSingleton<IConfiguration>(configuration);
             _context.Configuration = configuration;
 
+            services.AddTransient<IApplicationBuilderFactory, ApplicationBuilderFactory>();
             services.AddTransient<IServiceProviderFactory<IServiceCollection>, DefaultServiceProviderFactory>();
             services.AddOptions();
             services.AddLogging();

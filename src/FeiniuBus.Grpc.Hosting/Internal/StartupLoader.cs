@@ -11,11 +11,12 @@ namespace FeiniuBus.Grpc.Hosting.Internal
         public static StartupMethods LoadMethods(IServiceProvider hostingServiceProvider, Type startupType,
             string environmentName)
         {
+            var configureMethod = FindConfigureDelegate(startupType, environmentName);
             var servicesMethod = FindConfigureServicesDelegate(startupType, environmentName);
             var configureContainerMethod = FindConfigureContainerDelegate(startupType, environmentName);
 
             object instance = null;
-            if (servicesMethod != null && !servicesMethod.MethodInfo.IsStatic)
+            if (!configureMethod.MethodInfo.IsStatic || (servicesMethod != null && !servicesMethod.MethodInfo.IsStatic))
             {
                 instance = ActivatorUtilities.GetServiceOrCreateInstance(hostingServiceProvider, startupType);
             }
@@ -57,7 +58,7 @@ namespace FeiniuBus.Grpc.Hosting.Internal
                 return applicationServiceProvider ?? services.BuildServiceProvider();
             };
             
-            return new StartupMethods(instance, configureServices);
+            return new StartupMethods(instance, configureMethod.Build(instance), configureServices);
         }
 
         public static Type FindStartupType(string startupAssemblyName, string environmentName)
@@ -109,6 +110,13 @@ namespace FeiniuBus.Grpc.Hosting.Internal
             }
 
             return type;
+        }
+
+        private static ConfigureBuilder FindConfigureDelegate(Type startupType, string environmentName)
+        {
+            var configureMethod =
+                FindMethod(startupType, "Configure{0}", environmentName, typeof(void), required: true);
+            return new ConfigureBuilder(configureMethod);
         }
         
         private static ConfigureContainerBuilder FindConfigureContainerDelegate(Type startupType, string environmentName)
